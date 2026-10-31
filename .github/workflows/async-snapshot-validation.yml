@@ -35,15 +35,16 @@ jobs:
       - name: Verify regressions fail on upstream
         run: |
           cp src/lightning/pytorch/plugins/io/async_plugin.py /tmp/fixed_async_plugin.py
+          git fetch --depth=1 origin 84df182f50ab34301aabb3c0eb4031815bfb413d
           git show 84df182f50ab34301aabb3c0eb4031815bfb413d:src/lightning/pytorch/plugins/io/async_plugin.py > src/lightning/pytorch/plugins/io/async_plugin.py
           set +e
-          python -m pytest tests/tests_pytorch/plugins/test_async_checkpoint.py -k snapshots_mutable -q --timeout=60 --junitxml=evidence/before.xml > evidence/before.log 2>&1
+          python -m pytest tests/tests_pytorch/plugins/test_async_checkpoint.py -k snapshots_numpy -q --timeout=60 --junitxml=evidence/before.xml > evidence/before.log 2>&1
           status=$?
           set -e
           cp /tmp/fixed_async_plugin.py src/lightning/pytorch/plugins/io/async_plugin.py
           cat evidence/before.log
           test "$status" = 1
-          python -c "import xml.etree.ElementTree as E; s=E.parse('evidence/before.xml').find('testsuite'); assert s.get('tests')=='2' and s.get('failures')=='2' and s.get('errors')=='0', s.attrib"
+          python -c "import xml.etree.ElementTree as E; s=E.parse('evidence/before.xml').find('testsuite'); assert s.get('tests')=='4' and s.get('failures')=='4' and s.get('errors')=='0', s.attrib"
       - name: Run native checkpoint tests
         run: |
           python -m pytest tests/tests_pytorch/plugins/test_async_checkpoint.py tests/tests_pytorch/plugins/test_checkpoint_io_plugin.py tests/tests_fabric/utilities/test_cloud_io.py -q --timeout=120 --junitxml=evidence/after.xml | tee evidence/after.log
